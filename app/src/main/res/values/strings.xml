@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">PopularMovies</string>
 
     <string name="error_message">
@@ -6,4 +8,13 @@
     </string>
 
     <string name="action_refresh">Refresh</string>
+
+    <string name="popularSort">popular</string>
+    <string name="topRatedSort">top_rated</string>
+
+    <string-array name="movies_array">
+        <item>@string/popularSort</item>
+        <item>@string/topRatedSort</item>
+    </string-array>
+
 </resources>
