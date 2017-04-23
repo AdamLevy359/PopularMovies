@@ -33,8 +33,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         sortSpinner = (Spinner) findViewById(R.id.sort_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.movies_array, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                R.array.movies_array, R.layout.spinner_layout);
+        adapter.setDropDownViewResource(R.layout.spinner_layout);
         sortSpinner.setAdapter(adapter);
         userSortPreference = getString(R.string.popularSort);
 
