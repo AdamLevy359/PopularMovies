@@ -12,7 +12,7 @@ import java.net.HttpURLConnection;
 
 public class TheMovieDbJsonUtils {
 
-    public static Movie[] getMoviesFromJson(Context context, String moviesJsonString) throws JSONException{
+    public static Movie[] getMoviesFromJson(String moviesJsonString) throws JSONException{
         Movie[] movies = null;
         final String STATUS_CODE = "status_code";
         final String MOVIES_LIST = "results";

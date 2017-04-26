@@ -1,5 +1,7 @@
 package com.example.android.popularmovies;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,7 +18,6 @@ import com.example.android.popularmovies.utilities.TheMovieDbJsonUtils;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
     private GridView mGridView;
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     Spinner sortSpinner;
     String sortPreference;
     ArrayList<Movie> mMovies;
+    String jsonMoviesString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +62,17 @@ public class MainActivity extends AppCompatActivity {
         mMovieAdapter = new MovieAdapter(this, mMovies);
         mGridView.setAdapter(mMovieAdapter);
 
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
+                Class detailActivityClass = DetailActivity.class;
+                Intent intent = new Intent(MainActivity.this, detailActivityClass);
+                intent.putExtra("json", jsonMoviesString);
+                intent.putExtra("position", position);
+                startActivity(intent);
+
+            }
+        });
     }
 
     private void loadMovieData() {
@@ -97,11 +110,8 @@ public class MainActivity extends AppCompatActivity {
             URL movieRequestUrl = NetworkUtils.buildUrl(sortOrder);
 
             try {
-                String jsonMovieResponse = NetworkUtils
-                        .getResponseFromHttpUrl(movieRequestUrl);
-
-                Movie[] movieData = TheMovieDbJsonUtils.getMoviesFromJson(MainActivity.this, jsonMovieResponse);
-
+                jsonMoviesString = NetworkUtils.getResponseFromHttpUrl(movieRequestUrl);
+                Movie[] movieData = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
                 return movieData;
 
             } catch (Exception e) {
