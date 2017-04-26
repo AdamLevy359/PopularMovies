@@ -15,8 +15,6 @@ import java.util.List;
 public class MovieAdapter extends ArrayAdapter<Movie> {
     private static final String LOG_TAG = MovieAdapter.class.getSimpleName();
 
-    private Movie[] mMovies;
-
     /**
      * MovieAdapter constructor.
      *
@@ -53,10 +51,5 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         movieTitleView.setText(movie.movieTitle);
 
         return convertView;
-    }
-
-    public void setMovieData(Movie[] movies) {
-        mMovies = movies;
-        notifyDataSetChanged();
     }
 }
