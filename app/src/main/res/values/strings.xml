@@ -4,7 +4,7 @@
     <string name="app_name">PopularMovies</string>
 
     <string name="error_message">
-        An error has occurred. Please try again by clicking REFRESH
+        An error has occurred.  Movie data could not be retrieved from The Movie DB server.
     </string>
 
     <string name="action_refresh">Refresh</string>
