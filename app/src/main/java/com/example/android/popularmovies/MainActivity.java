@@ -16,6 +16,8 @@ import android.widget.TextView;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.example.android.popularmovies.utilities.TheMovieDbJsonUtils;
 
+import org.json.JSONException;
+
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -27,23 +29,48 @@ public class MainActivity extends AppCompatActivity {
     Spinner sortSpinner;
     String sortPreference;
     ArrayList<Movie> mMovies;
+    boolean initialized;
     String jsonMoviesString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        boolean jsonParseError = false;
+        if(!initialized && savedInstanceState != null){
+            if(savedInstanceState.containsKey("json")  && savedInstanceState.containsKey("sort")){
+
+                jsonMoviesString = savedInstanceState.getString("json");
+                sortPreference = savedInstanceState.getString("sort");
+                try {
+                    updateMoviesArray(jsonMoviesString);
+                    initialized = true;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    jsonParseError = true;
+                }
+            }
+        }
+        else if(!initialized){
+            mMovies = new ArrayList<Movie>();
+            sortPreference = getString(R.string.popularSort);
+        }
+
+
         setContentView(R.layout.activity_main);
 
         mGridView = (GridView) findViewById(R.id.movies_grid);
         mErrorMessageDisplay = (TextView) findViewById(R.id.movie_error_message_display);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
-        sortPreference = getString(R.string.popularSort);
         sortSpinner = (Spinner) findViewById(R.id.sort_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.movies_array, R.layout.spinner_layout);
         adapter.setDropDownViewResource(R.layout.spinner_layout);
         sortSpinner.setAdapter(adapter);
+        if(sortPreference == getString(R.string.popularSort))
+            sortSpinner.setSelection(0,false);
+        else
+            sortSpinner.setSelection(1,false);
 
         sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -73,6 +100,16 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        if(jsonParseError){
+            showErrorMessage();
+        }
+        else if (initialized){
+            showMovieGridView();
+        }
+        else {
+            loadMovieData();
+        }
     }
 
     private void loadMovieData() {
@@ -128,10 +165,28 @@ public class MainActivity extends AppCompatActivity {
                 for (Movie m: movies) {
                     mMovies.add(m);
                 }
+
                 showMovieGridView();
             } else {
                 showErrorMessage();
             }
         }
+    }
+
+    private void updateMoviesArray (String jsonMoviesString) throws JSONException {
+        Movie[] movies = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
+        if(movies != null){
+            mMovieAdapter.clear();
+            for (Movie m: movies) {
+                mMovies.add(m);
+            }
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState){
+        outState.putString("json", jsonMoviesString);
+        outState.putString("sortPreference", sortPreference);
+        super.onSaveInstanceState(outState);
     }
 }

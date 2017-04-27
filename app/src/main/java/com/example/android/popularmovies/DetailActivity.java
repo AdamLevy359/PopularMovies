@@ -44,7 +44,7 @@ public class DetailActivity extends AppCompatActivity {
                     movieTitle.setText("\nTitle:\n" + movies[position].movieTitle);
                     movieReleaseDate.setText("\nRelease Date:    \n" + movies[position].movieReleaseDate);
                     movieRating.setText("\nRating:    \n"+ movies[position].movieRating);
-                    moviePlot.setText("\nSummary:    \n" + movies[position].moviePlot);
+                    moviePlot.setText("Summary:    \n" + movies[position].moviePlot);
                     Picasso.with(this).load(movies[position].moviePosterURL).into(moviePoster);
                 } catch (JSONException e) {
                     e.printStackTrace();
