@@ -12,13 +12,12 @@ import java.net.URL;
 import java.util.Scanner;
 
 public class NetworkUtils {
-    private static final String TAG = NetworkUtils.class.getSimpleName();
 
-    //private static final String POPULAR_BASE_URL = "http://api.themoviedb.org/3/movie/popular";
-    //private static final String TOP_RATED_BASE_URL = "http://api.themoviedb.org/3/movie/top_rated";
-    private static final String MOVIE_BASE_URL ="http://api.themoviedb.org/3/movie/";
-
+    //TODO Replace the apiKey string with your API key from TheMovieDb
     private static final String apiKey = "PLACE_YOUR_THEMOVIEDB_API_KEY_HERE";
+
+    private static final String TAG = NetworkUtils.class.getSimpleName();
+    private static final String MOVIE_BASE_URL ="http://api.themoviedb.org/3/movie/";
     final static String KEY_PARAM = "api_key";
 
     /**
