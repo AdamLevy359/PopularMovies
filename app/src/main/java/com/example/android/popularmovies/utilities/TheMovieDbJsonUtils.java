@@ -9,11 +9,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 
 public class TheMovieDbJsonUtils {
 
-    public static Movie[] getMoviesFromJson(String moviesJsonString) throws JSONException{
-        Movie[] movies = null;
+    public static ArrayList<Movie> getMoviesFromJson(String moviesJsonString) throws JSONException{
         final String STATUS_CODE = "status_code";
         final String MOVIES_LIST = "results";
         final String MOVIE_POSTER_PATH = "poster_path";
@@ -21,18 +21,18 @@ public class TheMovieDbJsonUtils {
         final String MOVIE_RELEASE_DATE = "release_date";
         final String MOVIE_TITLE = "title";
         final String MOVIE_RATING = "vote_average";
+        ArrayList<Movie> movies = new ArrayList<>();
 
-        JSONObject moviesJsonArray = new JSONObject(moviesJsonString);
+        JSONObject moviesJsonObject = new JSONObject(moviesJsonString);
 
         /* Is there an error? */
-        if (moviesJsonArray.has(STATUS_CODE)) {
+        if (moviesJsonObject.has(STATUS_CODE)) {
             return null;
         }
 
-        JSONArray movieArray = moviesJsonArray.getJSONArray(MOVIES_LIST);
+        JSONArray moviesJsonArray = moviesJsonObject.getJSONArray(MOVIES_LIST);
 
-        movies = new Movie[movieArray.length()];
-        for(int i=0; i<movieArray.length(); i++){
+        for(int i=0; i<moviesJsonArray.length(); i++){
             String movieTitle;
             String moviePosterURL;
             String moviePlot;
@@ -40,17 +40,16 @@ public class TheMovieDbJsonUtils {
             String movieReleaseDate;
 
             //Get the JSON object representing the movie
-            JSONObject movieJsonObject = movieArray.getJSONObject(i);
-
+            JSONObject movieJsonObject = moviesJsonArray.getJSONObject(i);
             movieTitle = movieJsonObject.getString(MOVIE_TITLE);
             moviePosterURL = movieJsonObject.getString(MOVIE_POSTER_PATH);
             moviePlot = movieJsonObject.getString(MOVIE_OVERVIEW);
             movieRating = movieJsonObject.getString(MOVIE_RATING);
             movieReleaseDate = movieJsonObject.getString(MOVIE_RELEASE_DATE);
 
+            //Create a movie object from the Json data and add it to the ArrayList
             Movie movie = new Movie(movieTitle, moviePosterURL, moviePlot, movieRating, movieReleaseDate);
-
-            movies[i] = movie;
+            movies.add(movie);
         }
         return movies;
 

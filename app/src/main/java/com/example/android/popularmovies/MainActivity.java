@@ -26,42 +26,46 @@ public class MainActivity extends AppCompatActivity {
     private MovieAdapter mMovieAdapter;
     private TextView mErrorMessageDisplay;
     private ProgressBar mLoadingIndicator;
-    Spinner sortSpinner;
+    String jsonMoviesString;
     String sortPreference;
     ArrayList<Movie> mMovies;
-    boolean initialized;
-    String jsonMoviesString;
+    Spinner sortSpinner;
+
+
+    private void getSavedData(Bundle savedInstanceState) throws JSONException {
+        if (savedInstanceState.containsKey("json") && savedInstanceState.containsKey("sort")) {
+            jsonMoviesString = savedInstanceState.getString("json");
+            sortPreference = savedInstanceState.getString("sort");
+            ArrayList<Movie> savedMovies = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
+            mMovies.clear();
+            mMovies.addAll(savedMovies);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        boolean jsonParseError = false;
-        if(!initialized && savedInstanceState != null){
-            if(savedInstanceState.containsKey("json")  && savedInstanceState.containsKey("sort")){
+        setContentView(R.layout.activity_main);
 
-                jsonMoviesString = savedInstanceState.getString("json");
-                sortPreference = savedInstanceState.getString("sort");
-                try {
-                    updateMoviesArray(jsonMoviesString);
-                    initialized = true;
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    jsonParseError = true;
-                }
+        sortPreference = getString(R.string.popularSort);
+        mMovies = new ArrayList<>();
+
+        if(savedInstanceState != null){
+            try{
+                getSavedData(savedInstanceState);
+            }catch (JSONException e){
+                e.printStackTrace();
+                showErrorMessage();
+                return;
             }
         }
-        else if(!initialized){
-            mMovies = new ArrayList<Movie>();
-            sortPreference = getString(R.string.popularSort);
-        }
 
-
-        setContentView(R.layout.activity_main);
 
         mGridView = (GridView) findViewById(R.id.movies_grid);
         mErrorMessageDisplay = (TextView) findViewById(R.id.movie_error_message_display);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
+        //Create the spinner and set the dropdown to show the current sort order.
         sortSpinner = (Spinner) findViewById(R.id.sort_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.movies_array, R.layout.spinner_layout);
@@ -72,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         else
             sortSpinner.setSelection(1,false);
 
+        //Create the listener for the spinner
         sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -85,10 +90,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mMovies = new ArrayList<Movie>();
+
+        //Create custom movie adapter and gridview
         mMovieAdapter = new MovieAdapter(this, mMovies);
         mGridView.setAdapter(mMovieAdapter);
 
+        //Create the listener for the gridview
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
@@ -101,15 +108,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if(jsonParseError){
-            showErrorMessage();
-        }
-        else if (initialized){
-            showMovieGridView();
-        }
-        else {
-            loadMovieData();
-        }
+        loadMovieData();
     }
 
     private void loadMovieData() {
@@ -127,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
-    public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
+    public class FetchMoviesTask extends AsyncTask<String, Void, ArrayList<Movie>> {
 
         @Override
         protected void onPreExecute() {
@@ -137,18 +136,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected Movie[] doInBackground(String... params) {
+        protected ArrayList<Movie> doInBackground(String... params) {
 
             if (params.length == 0) {
                 return null;
             }
-
             String sortOrder = params[0];
             URL movieRequestUrl = NetworkUtils.buildUrl(sortOrder);
 
             try {
                 jsonMoviesString = NetworkUtils.getResponseFromHttpUrl(movieRequestUrl);
-                Movie[] movieData = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
+                ArrayList<Movie> movieData = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
                 return movieData;
 
             } catch (Exception e) {
@@ -158,27 +156,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(Movie[] movies) {
+        protected void onPostExecute(ArrayList<Movie> movies) {
             mLoadingIndicator.setVisibility(View.INVISIBLE);
             if (movies != null) {
                 mMovies.clear();
-                for (Movie m: movies) {
-                    mMovies.add(m);
-                }
-
+                mMovies.addAll(movies);
                 showMovieGridView();
             } else {
                 showErrorMessage();
-            }
-        }
-    }
-
-    private void updateMoviesArray (String jsonMoviesString) throws JSONException {
-        Movie[] movies = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
-        if(movies != null){
-            mMovieAdapter.clear();
-            for (Movie m: movies) {
-                mMovies.add(m);
             }
         }
     }

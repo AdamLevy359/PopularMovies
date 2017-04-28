@@ -12,6 +12,8 @@ import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 
+import java.util.ArrayList;
+
 public class DetailActivity extends AppCompatActivity {
 
     private TextView movieTitle;
@@ -40,12 +42,12 @@ public class DetailActivity extends AppCompatActivity {
                 String jsonMoviesString = intent.getStringExtra("json");
                 int position = intent.getIntExtra("position",0);
                 try {
-                    Movie[] movies = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
-                    movieTitle.setText("\nTitle:\n" + movies[position].movieTitle);
-                    movieReleaseDate.setText("\nRelease Date:    \n" + movies[position].movieReleaseDate);
-                    movieRating.setText("\nRating:    \n"+ movies[position].movieRating);
-                    moviePlot.setText("Summary:    \n" + movies[position].moviePlot);
-                    Picasso.with(this).load(movies[position].moviePosterURL).into(moviePoster);
+                    ArrayList<Movie> movies = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
+                    movieTitle.setText("\nTitle:\n" + movies.get(position).movieTitle);
+                    movieReleaseDate.setText("\nRelease Date:    \n" + movies.get(position).movieReleaseDate);
+                    movieRating.setText("\nRating:    \n"+ movies.get(position).movieRating);
+                    moviePlot.setText("Summary:    \n" + movies.get(position).moviePlot);
+                    Picasso.with(this).load(movies.get(position).moviePosterURL).into(moviePoster);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
