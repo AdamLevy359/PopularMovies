@@ -13,8 +13,9 @@
     <TextView
         android:id="@+id/movie_text"
         android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:gravity="center"
-        android:textSize="18dp"/>
+        android:layout_height="match_parent"
+        android:gravity="top|center_horizontal"
+        android:minLines="3"
+        android:textSize="18dp" />
 
 </LinearLayout>
