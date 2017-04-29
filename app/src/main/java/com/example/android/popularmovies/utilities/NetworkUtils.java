@@ -17,17 +17,34 @@ public class NetworkUtils {
     private static final String apiKey = "PLACE_YOUR_THEMOVIEDB_API_KEY_HERE";
 
     private static final String TAG = NetworkUtils.class.getSimpleName();
-    private static final String MOVIE_BASE_URL ="http://api.themoviedb.org/3/movie/";
+    private static final String POPULAR_MOVIES_BASE_URL ="http://api.themoviedb.org/3/movie/popular/";
+    private static final String TOP_RATED_MOVIES_BASE_URL = "http://api.themoviedb.org/3/movie/top_rated/";
+
     final static String KEY_PARAM = "api_key";
+
+    /**
+     * Builds the url to get the top rated moves
+     * @return The URL to query the movie server for top rated movies
+     */
+    public static URL buildTopRatedURL(){
+        return buildUrl(TOP_RATED_MOVIES_BASE_URL);
+    }
+
+    /**
+     * Builds the URL to get the most popular movies
+     * @return The URL to query the movie server for most popular movies
+     */
+    public static URL buildPopularMoviesURL(){
+        return buildUrl(POPULAR_MOVIES_BASE_URL);
+    }
 
     /**
      * Builds the URL used to talk to the movie server.
      *
-     * @param userSortPreference The users sort preference that will be queried for.
+     * @param baseURL The base url for either popular movies or top rated.
      * @return The URL to use to query the movie server.
      */
-    public static URL buildUrl(String userSortPreference) {
-        String baseURL =  MOVIE_BASE_URL + userSortPreference;
+    private static URL buildUrl(String baseURL) {
         Uri builtUri = Uri.parse(baseURL).buildUpon()
                 .appendQueryParameter(KEY_PARAM, apiKey)
                 .build();

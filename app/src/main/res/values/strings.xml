@@ -9,8 +9,8 @@
 
     <string name="action_refresh">Refresh</string>
 
-    <string name="popularSort">popular</string>
-    <string name="topRatedSort">top_rated</string>
+    <string name="popularSort">most popular</string>
+    <string name="topRatedSort">highest rated</string>
 
     <string-array name="movies_array">
         <item>@string/popularSort</item>

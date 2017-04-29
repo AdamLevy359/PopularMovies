@@ -45,8 +45,8 @@ public class DetailActivity extends AppCompatActivity {
                     ArrayList<Movie> movies = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
                     movieTitle.setText("\nTitle:\n" + movies.get(position).movieTitle);
                     movieReleaseDate.setText("\nRelease Date:    \n" + movies.get(position).movieReleaseDate);
-                    movieRating.setText("\nRating:    \n"+ movies.get(position).movieRating);
-                    moviePlot.setText("Summary:    \n" + movies.get(position).moviePlot);
+                    movieRating.setText("\nVote Average:    \n"+ movies.get(position).movieRating);
+                    moviePlot.setText("Plot Synopsis:    \n" + movies.get(position).moviePlot);
                     Picasso.with(this).load(movies.get(position).moviePosterURL).into(moviePoster);
                 } catch (JSONException e) {
                     e.printStackTrace();

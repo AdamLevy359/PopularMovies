@@ -142,7 +142,12 @@ public class MainActivity extends AppCompatActivity {
                 return null;
             }
             String sortOrder = params[0];
-            URL movieRequestUrl = NetworkUtils.buildUrl(sortOrder);
+            URL movieRequestUrl;
+
+            if(sortOrder.equals(getString(R.string.popularSort)))
+                movieRequestUrl = NetworkUtils.buildPopularMoviesURL();
+            else
+                movieRequestUrl = NetworkUtils.buildTopRatedURL();
 
             try {
                 jsonMoviesString = NetworkUtils.getResponseFromHttpUrl(movieRequestUrl);
