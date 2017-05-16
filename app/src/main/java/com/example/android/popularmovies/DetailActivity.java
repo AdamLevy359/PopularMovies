@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.utilities.TheMovieDbJsonUtils;
+import com.example.android.popularmovies.utilities.JsonUtils;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -42,7 +42,7 @@ public class DetailActivity extends AppCompatActivity {
                 String jsonMoviesString = intent.getStringExtra("json");
                 int position = intent.getIntExtra("position",0);
                 try {
-                    ArrayList<Movie> movies = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
+                    ArrayList<Movie> movies = JsonUtils.getMoviesFromJson(jsonMoviesString);
                     movieTitle.setText("\nTitle:\n" + movies.get(position).movieTitle);
                     movieReleaseDate.setText("\nRelease Date:    \n" + movies.get(position).movieReleaseDate);
                     movieRating.setText("\nVote Average:    \n"+ movies.get(position).movieRating);

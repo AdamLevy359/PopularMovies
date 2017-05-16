@@ -1,10 +1,13 @@
 package com.example.android.popularmovies;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -14,14 +17,21 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.example.android.popularmovies.utilities.NetworkUtils;
-import com.example.android.popularmovies.utilities.TheMovieDbJsonUtils;
+import com.example.android.popularmovies.utilities.JsonUtils;
 
 import org.json.JSONException;
 
+import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+import static com.example.android.popularmovies.utilities.JsonUtils.JSON_EXTRA;
+import static com.example.android.popularmovies.utilities.JsonUtils.POSITION_EXTRA;
+import static com.example.android.popularmovies.utilities.JsonUtils.SORT_EXTRA;
+
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Movie>> {
+    private static final int MOVIEDB_SEARCH_LOADER = 22;
     private GridView mGridView;
     private MovieAdapter mMovieAdapter;
     private TextView mErrorMessageDisplay;
@@ -33,10 +43,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void getSavedData(Bundle savedInstanceState) throws JSONException {
-        if (savedInstanceState.containsKey("json") && savedInstanceState.containsKey("sort")) {
-            jsonMoviesString = savedInstanceState.getString("json");
-            sortPreference = savedInstanceState.getString("sort");
-            ArrayList<Movie> savedMovies = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
+        if (savedInstanceState.containsKey(JSON_EXTRA) && savedInstanceState.containsKey(SORT_EXTRA)) {
+            jsonMoviesString = savedInstanceState.getString(JSON_EXTRA);
+            sortPreference = savedInstanceState.getString(SORT_EXTRA);
+            ArrayList<Movie> savedMovies = JsonUtils.getMoviesFromJson(jsonMoviesString);
             mMovies.clear();
             mMovies.addAll(savedMovies);
         }
@@ -101,8 +111,8 @@ public class MainActivity extends AppCompatActivity {
                                     int position, long id) {
                 Class detailActivityClass = DetailActivity.class;
                 Intent intent = new Intent(MainActivity.this, detailActivityClass);
-                intent.putExtra("json", jsonMoviesString);
-                intent.putExtra("position", position);
+                intent.putExtra(JSON_EXTRA, jsonMoviesString);
+                intent.putExtra(POSITION_EXTRA, position);
                 startActivity(intent);
 
             }
@@ -112,7 +122,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadMovieData() {
-        new FetchMoviesTask().execute(sortPreference);
+        Bundle queryBundle = new Bundle();
+        queryBundle.putString(SORT_EXTRA, sortPreference);
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader<String> githubSearchLoader = loaderManager.getLoader(MOVIEDB_SEARCH_LOADER);
+        if (githubSearchLoader == null) {
+            loaderManager.initLoader(MOVIEDB_SEARCH_LOADER, queryBundle, this);
+        } else {
+            loaderManager.restartLoader(MOVIEDB_SEARCH_LOADER, queryBundle, this);
+        }
     }
 
     private void showMovieGridView() {
@@ -126,57 +144,75 @@ public class MainActivity extends AppCompatActivity {
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
-    public class FetchMoviesTask extends AsyncTask<String, Void, ArrayList<Movie>> {
+    @Override
+    public Loader<ArrayList<Movie>> onCreateLoader(int id, final Bundle args) {
+        return new AsyncTaskLoader<ArrayList<Movie>>(this) {
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mLoadingIndicator.setVisibility(View.VISIBLE);
-            mGridView.setVisibility(View.GONE);
-        }
+            ArrayList<Movie> mMovieDbData;
 
-        @Override
-        protected ArrayList<Movie> doInBackground(String... params) {
+            protected void onStartLoading() {
 
-            if (params.length == 0) {
-                return null;
+                if (args == null) {
+                    return;
+                }
+                if(mMovieDbData != null){
+                    deliverResult(mMovieDbData);
+                }else {
+                    mLoadingIndicator.setVisibility(View.VISIBLE);
+                    mGridView.setVisibility(View.GONE);
+                    forceLoad();
+                }
             }
-            String sortOrder = params[0];
-            URL movieRequestUrl;
 
-            if(sortOrder.equals(getString(R.string.popularSort)))
-                movieRequestUrl = NetworkUtils.buildPopularMoviesURL();
-            else
-                movieRequestUrl = NetworkUtils.buildTopRatedURL();
+            public ArrayList<Movie> loadInBackground() {
+                String sortOrder = args.getString(SORT_EXTRA);
+                URL movieRequestUrl;
 
-            try {
-                jsonMoviesString = NetworkUtils.getResponseFromHttpUrl(movieRequestUrl);
-                ArrayList<Movie> movieData = TheMovieDbJsonUtils.getMoviesFromJson(jsonMoviesString);
-                return movieData;
+                if(sortOrder.equals(getString(R.string.popularSort)))
+                    movieRequestUrl = NetworkUtils.buildPopularMoviesURL();
+                else
+                    movieRequestUrl = NetworkUtils.buildTopRatedURL();
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
+                try {
+                    jsonMoviesString = NetworkUtils.getResponseFromHttpUrl(movieRequestUrl);
+                    ArrayList<Movie> movieData = JsonUtils.getMoviesFromJson(jsonMoviesString);
+                    return movieData;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
             }
-        }
 
-        @Override
-        protected void onPostExecute(ArrayList<Movie> movies) {
-            mLoadingIndicator.setVisibility(View.INVISIBLE);
-            if (movies != null) {
-                mMovies.clear();
-                mMovies.addAll(movies);
-                showMovieGridView();
-            } else {
-                showErrorMessage();
+            @Override
+            public void deliverResult(ArrayList<Movie> movieDbData) {
+                mMovieDbData = movieDbData;
+                super.deliverResult(movieDbData);
             }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
+        mLoadingIndicator.setVisibility(View.INVISIBLE);
+        if (data != null) {
+            mMovies.clear();
+            mMovies.addAll(data);
+            showMovieGridView();
+        } else {
+            showErrorMessage();
         }
     }
 
     @Override
+    public void onLoaderReset(Loader<ArrayList<Movie>> loader) {
+
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState){
-        outState.putString("json", jsonMoviesString);
-        outState.putString("sortPreference", sortPreference);
+        outState.putString(JSON_EXTRA, jsonMoviesString);
+        outState.putString(SORT_EXTRA, sortPreference);
         super.onSaveInstanceState(outState);
     }
 }

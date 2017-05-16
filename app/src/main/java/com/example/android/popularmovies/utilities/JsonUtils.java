@@ -11,7 +11,10 @@ import org.json.JSONObject;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 
-public class TheMovieDbJsonUtils {
+public class JsonUtils {
+    public static final String JSON_EXTRA = "json";
+    public static final String SORT_EXTRA = "sort";
+    public static final String POSITION_EXTRA = "position";
 
     public static ArrayList<Movie> getMoviesFromJson(String moviesJsonString) throws JSONException{
         final String STATUS_CODE = "status_code";
