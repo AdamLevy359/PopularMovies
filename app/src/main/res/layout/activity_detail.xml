@@ -68,6 +68,29 @@
             android:text="TextView"
             android:textSize="19sp"
             android:visibility="visible" />
+
+        <TextView
+            android:id="@+id/trailersTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="19sp"
+            android:text="@+id/trailers_label"
+            />
+
+        <ListView
+            android:id="@+id/trailersListView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        </ListView>
+
+        <ProgressBar
+            android:id="@+id/detail_pb_loading_indicator"
+            android:layout_height="42dp"
+            android:layout_width="42dp"
+            android:layout_gravity="center"
+            android:visibility="invisible" />
+
     </LinearLayout>
 
 </ScrollView>

@@ -17,4 +17,6 @@
         <item>@string/topRatedSort</item>
     </string-array>
 
+    <string name="trailers_label">Trailers:</string>
+
 </resources>

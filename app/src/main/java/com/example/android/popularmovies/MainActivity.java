@@ -1,13 +1,11 @@
 package com.example.android.popularmovies;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -15,14 +13,9 @@ import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-
 import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.example.android.popularmovies.utilities.JsonUtils;
-
 import org.json.JSONException;
-
-import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -30,8 +23,9 @@ import static com.example.android.popularmovies.utilities.JsonUtils.JSON_EXTRA;
 import static com.example.android.popularmovies.utilities.JsonUtils.POSITION_EXTRA;
 import static com.example.android.popularmovies.utilities.JsonUtils.SORT_EXTRA;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Movie>> {
-    private static final int MOVIEDB_SEARCH_LOADER = 22;
+public class MainActivity extends AppCompatActivity implements
+        LoaderManager.LoaderCallbacks<ArrayList<Movie>> {
+    private static final int MOVIEDB_SEARCH_LOADER = 1;
     private GridView mGridView;
     private MovieAdapter mMovieAdapter;
     private TextView mErrorMessageDisplay;
@@ -43,7 +37,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
 
     private void getSavedData(Bundle savedInstanceState) throws JSONException {
-        if (savedInstanceState.containsKey(JSON_EXTRA) && savedInstanceState.containsKey(SORT_EXTRA)) {
+        if (savedInstanceState.containsKey(JSON_EXTRA) &&
+                savedInstanceState.containsKey(SORT_EXTRA)) {
             jsonMoviesString = savedInstanceState.getString(JSON_EXTRA);
             sortPreference = savedInstanceState.getString(SORT_EXTRA);
             ArrayList<Movie> savedMovies = JsonUtils.getMoviesFromJson(jsonMoviesString);
@@ -125,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         Bundle queryBundle = new Bundle();
         queryBundle.putString(SORT_EXTRA, sortPreference);
         LoaderManager loaderManager = getSupportLoaderManager();
-        Loader<String> githubSearchLoader = loaderManager.getLoader(MOVIEDB_SEARCH_LOADER);
+        Loader<ArrayList<Movie>> githubSearchLoader = loaderManager.getLoader(MOVIEDB_SEARCH_LOADER);
         if (githubSearchLoader == null) {
             loaderManager.initLoader(MOVIEDB_SEARCH_LOADER, queryBundle, this);
         } else {
@@ -150,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
             ArrayList<Movie> mMovieDbData;
 
+            @Override
             protected void onStartLoading() {
 
                 if (args == null) {
@@ -164,6 +160,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 }
             }
 
+            @Override
             public ArrayList<Movie> loadInBackground() {
                 String sortOrder = args.getString(SORT_EXTRA);
                 URL movieRequestUrl;

@@ -17,8 +17,9 @@ public class NetworkUtils {
     private static final String apiKey = "PLACE_YOUR_THEMOVIEDB_API_KEY_HERE";
 
     private static final String TAG = NetworkUtils.class.getSimpleName();
-    private static final String POPULAR_MOVIES_BASE_URL ="http://api.themoviedb.org/3/movie/popular/";
-    private static final String TOP_RATED_MOVIES_BASE_URL = "http://api.themoviedb.org/3/movie/top_rated/";
+    private static final String BASE_URL = "http://api.themoviedb.org/3/movie/";
+    private static final String POPULAR_MOVIES_BASE_URL = BASE_URL + "popular/";
+    private static final String TOP_RATED_MOVIES_BASE_URL = BASE_URL + "top_rated/";
 
     final static String KEY_PARAM = "api_key";
 
@@ -36,6 +37,15 @@ public class NetworkUtils {
      */
     public static URL buildPopularMoviesURL(){
         return buildUrl(POPULAR_MOVIES_BASE_URL);
+    }
+
+    /**
+     * Builds the URL to get the trailers for a movie
+     * @param videoId The id of the movie
+     * @return The URL to query the list of trailers for a movie
+     */
+    public static URL buildTrailersURL(int videoId){
+        return buildUrl(BASE_URL + videoId + "/videos/");
     }
 
     /**
