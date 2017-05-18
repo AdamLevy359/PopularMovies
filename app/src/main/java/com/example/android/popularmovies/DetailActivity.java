@@ -35,7 +35,7 @@ public class DetailActivity extends AppCompatActivity implements
     private TextView movieRating;
     private ImageView moviePoster;
     private TextView trailersLabel;
-    private ListView trailersListView;
+    private ExpandableHeightListView trailersListView;
     private TrailerAdapter trailerAdapter;
     private ProgressBar mLoadingIndicator;
 
@@ -73,7 +73,7 @@ public class DetailActivity extends AppCompatActivity implements
         moviePlot = (TextView) findViewById(R.id.moviePlot);
         movieRating = (TextView) findViewById(R.id.movieRating);
         moviePoster = (ImageView) findViewById(R.id.moviePoster);
-        trailersListView = (ListView) findViewById(R.id.trailersListView);
+        trailersListView = (ExpandableHeightListView) findViewById(R.id.trailersListView);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.detail_pb_loading_indicator);
 
         try {
@@ -101,6 +101,7 @@ public class DetailActivity extends AppCompatActivity implements
     }
 
     private void showTrailerList(){
+        trailersListView.setExpanded(true);
         trailersListView.setVisibility(View.VISIBLE);
         trailerAdapter.notifyDataSetChanged();
     }

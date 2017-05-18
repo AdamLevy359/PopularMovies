@@ -77,12 +77,15 @@
             android:text="@string/trailers_label"
             />
 
-        <ListView
+        <com.example.android.popularmovies.ExpandableHeightListView
             android:id="@+id/trailersListView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:fadingEdge="none"
+            android:focusable="false"
+            android:scrollbars="none">
 
-        </ListView>
+        </com.example.android.popularmovies.ExpandableHeightListView>
 
         <ProgressBar
             android:id="@+id/detail_pb_loading_indicator"
