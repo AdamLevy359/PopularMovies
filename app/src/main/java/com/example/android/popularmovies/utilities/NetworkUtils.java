@@ -44,8 +44,8 @@ public class NetworkUtils {
      * @param videoId The id of the movie
      * @return The URL to query the list of trailers for a movie
      */
-    public static URL buildTrailersURL(int videoId){
-        return buildUrl(BASE_URL + videoId + "/videos/");
+    public static URL buildTrailersURL(long videoId){
+        return buildUrl(BASE_URL + videoId + "/videos");
     }
 
     /**

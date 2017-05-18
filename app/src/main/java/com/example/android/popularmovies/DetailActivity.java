@@ -90,7 +90,7 @@ public class DetailActivity extends AppCompatActivity implements
 
     void loadTrailers(){
         Bundle queryBundle = new Bundle();
-        queryBundle.putInt(MOVIE_ID, movie.movieId);
+        queryBundle.putLong(MOVIE_ID, movie.movieId);
         LoaderManager loaderManager = getSupportLoaderManager();
         Loader<ArrayList<Movie>> githubSearchLoader = loaderManager.getLoader(TRAILER_REVIEW_SEARCH_LOADER);
         if (githubSearchLoader == null) {
@@ -128,7 +128,7 @@ public class DetailActivity extends AppCompatActivity implements
 
             @Override
             public ArrayList<String> loadInBackground() {
-                int movieId = args.getInt(MOVIE_ID);
+                long movieId = args.getLong(MOVIE_ID);
                 URL trailerRequestUrl;
                 trailerRequestUrl = NetworkUtils.buildTrailersURL(movieId);
 

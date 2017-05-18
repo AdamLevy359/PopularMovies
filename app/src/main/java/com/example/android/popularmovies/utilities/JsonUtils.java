@@ -44,7 +44,7 @@ public class JsonUtils {
             String moviePlot;
             String movieRating;
             String movieReleaseDate;
-            int movieId;
+            long movieId;
 
             //Get the JSON object representing the movie
             JSONObject movieJsonObject = moviesJsonArray.getJSONObject(i);
@@ -53,8 +53,7 @@ public class JsonUtils {
             moviePlot = movieJsonObject.getString(MOVIE_OVERVIEW);
             movieRating = movieJsonObject.getString(MOVIE_RATING);
             movieReleaseDate = movieJsonObject.getString(MOVIE_RELEASE_DATE);
-            long tempMovieId = movieJsonObject.getLong(MOVIE_ID);
-            movieId = (int)tempMovieId;
+            movieId = movieJsonObject.getLong(MOVIE_ID);
 
             //Create a movie object from the Json data and add it to the ArrayList
             Movie movie = new Movie(movieTitle, moviePosterURL, moviePlot, movieRating, movieReleaseDate, movieId);
