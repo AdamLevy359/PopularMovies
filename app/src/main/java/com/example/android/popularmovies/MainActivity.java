@@ -13,6 +13,8 @@ import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import com.example.android.popularmovies.adapters.MovieAdapter;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.example.android.popularmovies.utilities.JsonUtils;
 import org.json.JSONException;

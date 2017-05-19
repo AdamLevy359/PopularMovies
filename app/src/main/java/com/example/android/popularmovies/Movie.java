@@ -1,11 +1,11 @@
 package com.example.android.popularmovies;
 
 public class Movie {
-    String movieTitle;
-    String moviePosterURL;
-    String moviePlot;
-    String movieRating;
-    String movieReleaseDate;
+    public String movieTitle;
+    public String moviePosterURL;
+    public String moviePlot;
+    public String movieRating;
+    public String movieReleaseDate;
     long movieId;
 
     public Movie(String title, String posterURL, String plot, String rating, String releaseDate, long id){

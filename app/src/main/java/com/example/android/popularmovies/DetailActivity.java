@@ -9,10 +9,12 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.example.android.popularmovies.adapters.ReviewAdapter;
+import com.example.android.popularmovies.adapters.TrailerAdapter;
 import com.example.android.popularmovies.utilities.JsonUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.squareup.picasso.Picasso;
@@ -23,7 +25,6 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import static com.example.android.popularmovies.utilities.JsonUtils.MOVIE_ID;
-import static com.example.android.popularmovies.utilities.JsonUtils.SORT_EXTRA;
 
 public class DetailActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<ArrayList<String>>{
@@ -36,11 +37,15 @@ public class DetailActivity extends AppCompatActivity implements
     private ImageView moviePoster;
     private TextView trailersLabel;
     private ExpandableHeightListView trailersListView;
+    private ExpandableHeightListView reviewsListView;
     private TrailerAdapter trailerAdapter;
+    private ReviewAdapter reviewsAdapter;
     private ProgressBar mLoadingIndicator;
 
     Movie movie;
     ArrayList<String> trailers;
+    ArrayList<Review> reviews;
+    ScrollView scrollView;
 
     /**
      * Populates the textviews, which show the movie details: title, release date, etc.
@@ -74,21 +79,28 @@ public class DetailActivity extends AppCompatActivity implements
         movieRating = (TextView) findViewById(R.id.movieRating);
         moviePoster = (ImageView) findViewById(R.id.moviePoster);
         trailersListView = (ExpandableHeightListView) findViewById(R.id.trailersListView);
+        reviewsListView = (ExpandableHeightListView) findViewById(R.id.reviewsListView);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.detail_pb_loading_indicator);
+        scrollView = (ScrollView) findViewById(R.id.detailScrollView);
 
         try {
             loadMovie(getIntent());
             trailers = new ArrayList<>();
             trailerAdapter = new TrailerAdapter(this, trailers);
             trailersListView.setAdapter(trailerAdapter);
-            loadTrailers();
+
+            reviews = new ArrayList<>();
+            reviewsAdapter = new ReviewAdapter(this, reviews);
+            reviewsListView.setAdapter(reviewsAdapter);
+
+            loadTrailersAndReviews();
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    void loadTrailers(){
+    void loadTrailersAndReviews(){
         Bundle queryBundle = new Bundle();
         queryBundle.putLong(MOVIE_ID, movie.movieId);
         LoaderManager loaderManager = getSupportLoaderManager();
@@ -100,17 +112,22 @@ public class DetailActivity extends AppCompatActivity implements
         }
     }
 
-    private void showTrailerList(){
+    private void showTrailerAndReviewList(){
         trailersListView.setExpanded(true);
         trailersListView.setVisibility(View.VISIBLE);
         trailerAdapter.notifyDataSetChanged();
+
+        reviewsListView.setExpanded(true);
+        reviewsListView.setVisibility(View.VISIBLE);
+        reviewsAdapter.notifyDataSetChanged();
+        scrollView.smoothScrollTo(0,0);
     }
 
     @Override
     public Loader<ArrayList<String>> onCreateLoader(int id, final Bundle args) {
         return new AsyncTaskLoader<ArrayList<String>>(this) {
 
-            ArrayList<String> mTrailerData;
+            ArrayList<String> mTrailerReviewData;
 
             @Override
             protected void onStartLoading() {
@@ -118,8 +135,8 @@ public class DetailActivity extends AppCompatActivity implements
                 if (args == null) {
                     return;
                 }
-                if(mTrailerData != null){
-                    deliverResult(mTrailerData);
+                if(mTrailerReviewData != null){
+                    deliverResult(mTrailerReviewData);
                 }else {
                     mLoadingIndicator.setVisibility(View.VISIBLE);
                     trailersListView.setVisibility(View.GONE);
@@ -131,12 +148,21 @@ public class DetailActivity extends AppCompatActivity implements
             public ArrayList<String> loadInBackground() {
                 long movieId = args.getLong(MOVIE_ID);
                 URL trailerRequestUrl;
+                URL reviewsRequestUrl;
                 trailerRequestUrl = NetworkUtils.buildTrailersURL(movieId);
+                reviewsRequestUrl = NetworkUtils.buildReviewsURL(movieId);
 
                 try {
                     String jsonTrailersString = NetworkUtils.getResponseFromHttpUrl(trailerRequestUrl);
-                    ArrayList<String> trailerData = JsonUtils.getTrailersFromJson(jsonTrailersString);
-                    return trailerData;
+                    String jsonReviewsString = NetworkUtils.getResponseFromHttpUrl(reviewsRequestUrl);
+                    if(jsonTrailersString == null || jsonReviewsString == null){
+                        return null;
+                    }
+
+                    ArrayList<String> trailerReviewData = new ArrayList<>();
+                    trailerReviewData.add(jsonTrailersString);
+                    trailerReviewData.add(jsonReviewsString);
+                    return trailerReviewData;
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -145,9 +171,9 @@ public class DetailActivity extends AppCompatActivity implements
             }
 
             @Override
-            public void deliverResult(ArrayList<String> trailerData) {
-                mTrailerData = trailerData;
-                super.deliverResult(trailerData);
+            public void deliverResult(ArrayList<String> trailerReviewData) {
+                mTrailerReviewData = trailerReviewData;
+                super.deliverResult(trailerReviewData);
             }
         };
     }
@@ -156,11 +182,17 @@ public class DetailActivity extends AppCompatActivity implements
     public void onLoadFinished(Loader<ArrayList<String>> loader, ArrayList<String> data) {
         mLoadingIndicator.setVisibility(View.INVISIBLE);
         if (data != null) {
-            trailers.clear();
-            trailers.addAll(data);
-            showTrailerList();
-        } else {
-            //showErrorMessage();
+            try {
+                ArrayList<String> trailerData = JsonUtils.getTrailersFromJson(data.get(0));
+                ArrayList<Review> reviewData = JsonUtils.getReviewsFromJson(data.get(1));
+                trailers.clear();
+                trailers.addAll(trailerData);
+                reviews.clear();
+                reviews.addAll(reviewData);
+                showTrailerAndReviewList();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 

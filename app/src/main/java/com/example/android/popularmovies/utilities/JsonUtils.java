@@ -1,14 +1,12 @@
 package com.example.android.popularmovies.utilities;
 
-import android.content.Context;
-
 import com.example.android.popularmovies.Movie;
+import com.example.android.popularmovies.Review;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 
 public class JsonUtils {
@@ -18,7 +16,7 @@ public class JsonUtils {
     public static final String MOVIE_ID = "id";
 
     private static final String STATUS_CODE = "status_code";
-    private static final String MOVIES_LIST = "results";
+    private static final String RESULTS_LIST = "results";
 
     public static ArrayList<Movie> getMoviesFromJson(String moviesJsonString) throws JSONException{
         final String MOVIE_POSTER_PATH = "poster_path";
@@ -36,7 +34,7 @@ public class JsonUtils {
             return null;
         }
 
-        JSONArray moviesJsonArray = moviesJsonObject.getJSONArray(MOVIES_LIST);
+        JSONArray moviesJsonArray = moviesJsonObject.getJSONArray(RESULTS_LIST);
 
         for(int i=0; i<moviesJsonArray.length(); i++){
             String movieTitle;
@@ -66,13 +64,14 @@ public class JsonUtils {
     public static ArrayList<String> getTrailersFromJson(String trailersJsonString) throws JSONException{
         final String TRAILER_KEY = "key";
         final String SITE_KEY = "site";
+        final String TYPE_KEY = "type";
         ArrayList<String> trailers = new ArrayList<>();
         JSONObject trailersJsonObject = new JSONObject(trailersJsonString);
         /* Is there an error? */
         if (trailersJsonObject.has(STATUS_CODE)) {
             return null;
         }
-        JSONArray trailersJsonArray = trailersJsonObject.getJSONArray(MOVIES_LIST);
+        JSONArray trailersJsonArray = trailersJsonObject.getJSONArray(RESULTS_LIST);
 
         for(int i=0; i<trailersJsonArray.length(); i++){
 
@@ -81,14 +80,37 @@ public class JsonUtils {
 
             //Get the site and make sure it is YouTube
             String site = trailerJsonObject.getString(SITE_KEY);
-            if(site.equalsIgnoreCase("YouTube")) {
-                //If it is youtube then add it to the list of trailers
+            String type = trailerJsonObject.getString(TYPE_KEY);
+            if(site.equalsIgnoreCase("YouTube") && type.equalsIgnoreCase("Trailer")) {
+                //If it is youtube trailer then add it to the list of trailers
                 String trailer = trailerJsonObject.getString(TRAILER_KEY);
                 trailers.add(trailer);
             }
         }
         return trailers;
 
+    }
+
+    public static ArrayList<Review> getReviewsFromJson(String reviewsJsonString) throws JSONException{
+        final String AUTHOR_KEY = "author";
+        final String CONTENT_KEY = "content";
+        ArrayList<Review> reviews = new ArrayList<>();
+        JSONObject reviewsJsonObject = new JSONObject(reviewsJsonString);
+
+        if (reviewsJsonObject.has(STATUS_CODE)) {
+            return null;
+        }
+        JSONArray reviewsJsonArray = reviewsJsonObject.getJSONArray(RESULTS_LIST);
+        for(int i=0; i<reviewsJsonArray.length(); i++){
+            JSONObject reviewJsonObject = reviewsJsonArray.getJSONObject(i);
+
+            String author = reviewJsonObject.getString(AUTHOR_KEY);
+            String comment = reviewJsonObject.getString(CONTENT_KEY);
+
+            Review review = new Review(author,comment);
+            reviews.add(review);
+        }
+        return reviews;
     }
 }
 

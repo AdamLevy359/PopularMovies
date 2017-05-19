@@ -49,6 +49,15 @@ public class NetworkUtils {
     }
 
     /**
+     * Builds the URL to the get the reviews for a movie
+     * @param videoID The id of the movie
+     * @return The URL to query the list of reviews for a movie
+     */
+    public static URL buildReviewsURL(long videoID){
+        return buildUrl(BASE_URL + videoID + "/reviews");
+    }
+
+    /**
      * Builds the URL used to talk to the movie server.
      *
      * @param baseURL The base url for either popular movies or top rated.

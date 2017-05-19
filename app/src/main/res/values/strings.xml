@@ -18,5 +18,6 @@
     </string-array>
 
     <string name="trailers_label">Trailers:</string>
+    <string name="reviews_label">Reviews:</string>
 
 </resources>

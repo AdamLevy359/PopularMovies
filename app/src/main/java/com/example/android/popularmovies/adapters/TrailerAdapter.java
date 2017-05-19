@@ -1,23 +1,19 @@
-package com.example.android.popularmovies;
+package com.example.android.popularmovies.adapters;
 
 
 import android.app.Activity;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
+import com.example.android.popularmovies.R;
+import com.example.android.popularmovies.adapters.MovieAdapter;
 
 import java.util.List;
 
 public class TrailerAdapter extends ArrayAdapter<String> {
-    private static final String LOG_TAG = MovieAdapter.class.getSimpleName();
-
-
     public TrailerAdapter(Activity context, List<String> trailers) {
         super(context, 0, trailers);
     }
@@ -34,7 +30,8 @@ public class TrailerAdapter extends ArrayAdapter<String> {
         }
 
         TextView movieTitleView = (TextView) convertView.findViewById(R.id.trailer_text);
-        movieTitleView.setText("Trailer " + position);
+        int pos = position + 1;
+        movieTitleView.setText("Trailer " + pos);
         return convertView;
     }
 }
