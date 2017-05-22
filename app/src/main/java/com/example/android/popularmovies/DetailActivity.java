@@ -30,10 +30,8 @@ public class DetailActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<ArrayList<String>>{
     private static final int TRAILER_REVIEW_SEARCH_LOADER = 2;
 
-    private TextView movieTitle;
-    private TextView movieReleaseDate;
+    private TextView movieTitleReleaseRating;
     private TextView moviePlot;
-    private TextView movieRating;
     private ImageView moviePoster;
     private TextView trailersLabel;
     private ExpandableHeightListView trailersListView;
@@ -58,10 +56,11 @@ public class DetailActivity extends AppCompatActivity implements
                 int position = intent.getIntExtra("position",0);
                 ArrayList<Movie> movies = JsonUtils.getMoviesFromJson(jsonMoviesString);
                 movie = movies.get(position);
-                movieTitle.setText("\nTitle:\n" + movie.movieTitle);
-                movieReleaseDate.setText("\nRelease Date:    \n" + movie.movieReleaseDate);
-                movieRating.setText("\nVote Average:    \n"+ movie.movieRating);
-                moviePlot.setText("Plot Synopsis:    \n" + movie.moviePlot);
+                movieTitleReleaseRating.setText(
+                        "\nTitle:\n" + movie.movieTitle +
+                        "\n\nRelease Date:    \n" + movie.movieReleaseDate +
+                        "\n\nVote Average:    \n"+ movie.movieRating + "\n");
+                moviePlot.setText("\nPlot Synopsis:    \n" + movie.moviePlot + "\n");
                 Picasso.with(this).load(movie.moviePosterURL).into(moviePoster);
             }
         }
@@ -73,10 +72,8 @@ public class DetailActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        movieTitle = (TextView) findViewById(R.id.movieTitle);
-        movieReleaseDate = (TextView) findViewById(R.id.movieReleaseDate);
+        movieTitleReleaseRating = (TextView) findViewById(R.id.movieTitle);
         moviePlot = (TextView) findViewById(R.id.moviePlot);
-        movieRating = (TextView) findViewById(R.id.movieRating);
         moviePoster = (ImageView) findViewById(R.id.moviePoster);
         trailersListView = (ExpandableHeightListView) findViewById(R.id.trailersListView);
         reviewsListView = (ExpandableHeightListView) findViewById(R.id.reviewsListView);
