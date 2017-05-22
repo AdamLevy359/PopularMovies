@@ -1,27 +1,29 @@
 package com.example.android.popularmovies;
 
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.example.android.popularmovies.AsyncTasks.DetailsAsyncTaskLoader;
 import com.example.android.popularmovies.adapters.ReviewAdapter;
 import com.example.android.popularmovies.adapters.TrailerAdapter;
 import com.example.android.popularmovies.utilities.JsonUtils;
-import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
-
-import java.net.URL;
 import java.util.ArrayList;
 
 import static com.example.android.popularmovies.utilities.JsonUtils.MOVIE_ID;
@@ -39,6 +41,8 @@ public class DetailActivity extends AppCompatActivity implements
     private TrailerAdapter trailerAdapter;
     private ReviewAdapter reviewsAdapter;
     private ProgressBar mLoadingIndicator;
+    private ImageButton imageButton;
+    private boolean isFavorite = false;
 
     Movie movie;
     ArrayList<String> trailers;
@@ -79,12 +83,32 @@ public class DetailActivity extends AppCompatActivity implements
         reviewsListView = (ExpandableHeightListView) findViewById(R.id.reviewsListView);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.detail_pb_loading_indicator);
         scrollView = (ScrollView) findViewById(R.id.detailScrollView);
+        imageButton = (ImageButton) findViewById(R.id.imageButton);
+
+        imageButton.setOnClickListener(new ImageButton.OnClickListener(){
+            public void onClick(View view) {
+                if(!isFavorite) {
+                    imageButton.setImageResource(R.mipmap.fullheart);
+                    isFavorite = true;
+                } else {
+                    imageButton.setImageResource(R.mipmap.emptyheart);
+                    isFavorite = false;
+                }
+            }
+        });
 
         try {
             loadMovie(getIntent());
             trailers = new ArrayList<>();
             trailerAdapter = new TrailerAdapter(this, trailers);
             trailersListView.setAdapter(trailerAdapter);
+
+            trailersListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+                public void onItemClick(AdapterView<?> parent, View v, int position, long id){
+                    String trailer = trailers.get(position);
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + trailer)));
+                }
+            });
 
             reviews = new ArrayList<>();
             reviewsAdapter = new ReviewAdapter(this, reviews);
@@ -122,57 +146,7 @@ public class DetailActivity extends AppCompatActivity implements
 
     @Override
     public Loader<ArrayList<String>> onCreateLoader(int id, final Bundle args) {
-        return new AsyncTaskLoader<ArrayList<String>>(this) {
-
-            ArrayList<String> mTrailerReviewData;
-
-            @Override
-            protected void onStartLoading() {
-
-                if (args == null) {
-                    return;
-                }
-                if(mTrailerReviewData != null){
-                    deliverResult(mTrailerReviewData);
-                }else {
-                    mLoadingIndicator.setVisibility(View.VISIBLE);
-                    trailersListView.setVisibility(View.GONE);
-                    forceLoad();
-                }
-            }
-
-            @Override
-            public ArrayList<String> loadInBackground() {
-                long movieId = args.getLong(MOVIE_ID);
-                URL trailerRequestUrl;
-                URL reviewsRequestUrl;
-                trailerRequestUrl = NetworkUtils.buildTrailersURL(movieId);
-                reviewsRequestUrl = NetworkUtils.buildReviewsURL(movieId);
-
-                try {
-                    String jsonTrailersString = NetworkUtils.getResponseFromHttpUrl(trailerRequestUrl);
-                    String jsonReviewsString = NetworkUtils.getResponseFromHttpUrl(reviewsRequestUrl);
-                    if(jsonTrailersString == null || jsonReviewsString == null){
-                        return null;
-                    }
-
-                    ArrayList<String> trailerReviewData = new ArrayList<>();
-                    trailerReviewData.add(jsonTrailersString);
-                    trailerReviewData.add(jsonReviewsString);
-                    return trailerReviewData;
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-
-            @Override
-            public void deliverResult(ArrayList<String> trailerReviewData) {
-                mTrailerReviewData = trailerReviewData;
-                super.deliverResult(trailerReviewData);
-            }
-        };
+        return new DetailsAsyncTaskLoader(this, args, mLoadingIndicator, trailersListView);
     }
 
     @Override
@@ -197,6 +171,5 @@ public class DetailActivity extends AppCompatActivity implements
     public void onLoaderReset(Loader<ArrayList<String>> loader) {
 
     }
-
 
 }
