@@ -17,9 +17,10 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.AsyncTasks.DetailsAsyncTaskLoader;
+import com.example.android.popularmovies.asyncTasks.DetailsAsyncTaskLoader;
 import com.example.android.popularmovies.adapters.ReviewAdapter;
 import com.example.android.popularmovies.adapters.TrailerAdapter;
+import com.example.android.popularmovies.asyncTasks.DetailsLoaderManager;
 import com.example.android.popularmovies.utilities.JsonUtils;
 import com.squareup.picasso.Picasso;
 
@@ -28,8 +29,7 @@ import java.util.ArrayList;
 
 import static com.example.android.popularmovies.utilities.JsonUtils.MOVIE_ID;
 
-public class DetailActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<ArrayList<String>>{
+public class DetailActivity extends AppCompatActivity{
     private static final int TRAILER_REVIEW_SEARCH_LOADER = 2;
 
     private TextView movieTitleReleaseRating;
@@ -48,6 +48,8 @@ public class DetailActivity extends AppCompatActivity implements
     ArrayList<String> trailers;
     ArrayList<Review> reviews;
     ScrollView scrollView;
+
+    DetailsLoaderManager detailsLoaderManager;
 
     /**
      * Populates the textviews, which show the movie details: title, release date, etc.
@@ -127,49 +129,12 @@ public class DetailActivity extends AppCompatActivity implements
         LoaderManager loaderManager = getSupportLoaderManager();
         Loader<ArrayList<Movie>> githubSearchLoader = loaderManager.getLoader(TRAILER_REVIEW_SEARCH_LOADER);
         if (githubSearchLoader == null) {
-            loaderManager.initLoader(TRAILER_REVIEW_SEARCH_LOADER, queryBundle, this);
+            detailsLoaderManager = new DetailsLoaderManager(getApplicationContext(), trailersListView, reviewsListView,
+                    trailerAdapter, reviewsAdapter, scrollView, mLoadingIndicator, trailers, reviews);
+            loaderManager.initLoader(TRAILER_REVIEW_SEARCH_LOADER, queryBundle, detailsLoaderManager);
         } else {
-            loaderManager.restartLoader(TRAILER_REVIEW_SEARCH_LOADER, queryBundle, this);
+            loaderManager.restartLoader(TRAILER_REVIEW_SEARCH_LOADER, queryBundle, detailsLoaderManager);
         }
-    }
-
-    private void showTrailerAndReviewList(){
-        trailersListView.setExpanded(true);
-        trailersListView.setVisibility(View.VISIBLE);
-        trailerAdapter.notifyDataSetChanged();
-
-        reviewsListView.setExpanded(true);
-        reviewsListView.setVisibility(View.VISIBLE);
-        reviewsAdapter.notifyDataSetChanged();
-        scrollView.smoothScrollTo(0,0);
-    }
-
-    @Override
-    public Loader<ArrayList<String>> onCreateLoader(int id, final Bundle args) {
-        return new DetailsAsyncTaskLoader(this, args, mLoadingIndicator, trailersListView);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<ArrayList<String>> loader, ArrayList<String> data) {
-        mLoadingIndicator.setVisibility(View.INVISIBLE);
-        if (data != null) {
-            try {
-                ArrayList<String> trailerData = JsonUtils.getTrailersFromJson(data.get(0));
-                ArrayList<Review> reviewData = JsonUtils.getReviewsFromJson(data.get(1));
-                trailers.clear();
-                trailers.addAll(trailerData);
-                reviews.clear();
-                reviews.addAll(reviewData);
-                showTrailerAndReviewList();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<ArrayList<String>> loader) {
-
     }
 
 }

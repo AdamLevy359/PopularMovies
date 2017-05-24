@@ -1,4 +1,4 @@
-package com.example.android.popularmovies.AsyncTasks;
+package com.example.android.popularmovies.asyncTasks;
 
 import android.support.v4.content.AsyncTaskLoader;
 import android.content.Context;
