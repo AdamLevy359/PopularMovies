@@ -2,11 +2,14 @@ package com.example.android.popularmovies;
 
 
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -21,6 +24,8 @@ import com.example.android.popularmovies.asyncTasks.DetailsAsyncTaskLoader;
 import com.example.android.popularmovies.adapters.ReviewAdapter;
 import com.example.android.popularmovies.adapters.TrailerAdapter;
 import com.example.android.popularmovies.asyncTasks.DetailsLoaderManager;
+import com.example.android.popularmovies.data.MovieColumns;
+import com.example.android.popularmovies.data.MovieProvider;
 import com.example.android.popularmovies.utilities.JsonUtils;
 import com.squareup.picasso.Picasso;
 
@@ -29,8 +34,9 @@ import java.util.ArrayList;
 
 import static com.example.android.popularmovies.utilities.JsonUtils.MOVIE_ID;
 
-public class DetailActivity extends AppCompatActivity{
+public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
     private static final int TRAILER_REVIEW_SEARCH_LOADER = 2;
+    private static final int CURSOR_LOADER_ID = 3;
 
     private TextView movieTitleReleaseRating;
     private TextView moviePlot;
@@ -92,9 +98,12 @@ public class DetailActivity extends AppCompatActivity{
                 if(!isFavorite) {
                     imageButton.setImageResource(R.mipmap.fullheart);
                     isFavorite = true;
+                    addMovieToFavoritesDb();
+
                 } else {
                     imageButton.setImageResource(R.mipmap.emptyheart);
                     isFavorite = false;
+                    removeMovieFromFavoritesDb();
                 }
             }
         });
@@ -116,6 +125,7 @@ public class DetailActivity extends AppCompatActivity{
             reviewsAdapter = new ReviewAdapter(this, reviews);
             reviewsListView.setAdapter(reviewsAdapter);
 
+            loadFavoritesDb();
             loadTrailersAndReviews();
 
         } catch (JSONException e) {
@@ -137,4 +147,45 @@ public class DetailActivity extends AppCompatActivity{
         }
     }
 
+    void removeMovieFromFavoritesDb(){
+        getContentResolver().delete(MovieProvider.Movies.withId(movie.movieId), null, null);
+    }
+
+    void addMovieToFavoritesDb(){
+        ContentValues cv = new ContentValues();
+        cv.put(MovieColumns.MOVIE_DB_ID, String.valueOf(movie.movieId));
+        cv.put(MovieColumns.TITLE, movie.movieTitle);
+        getContentResolver().insert(MovieProvider.Movies.withId(movie.movieId),cv);
+    }
+
+    void loadFavoritesDb(){
+        LoaderManager loaderManager = getSupportLoaderManager();
+        loaderManager.initLoader(CURSOR_LOADER_ID, null, this);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new CursorLoader(this, MovieProvider.Movies.withId(movie.movieId),
+                null,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if(data.getCount() > 0){
+            isFavorite = true;
+            imageButton.setImageResource(R.mipmap.fullheart);
+        }
+        else{
+            isFavorite = false;
+            imageButton.setImageResource(R.mipmap.emptyheart);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+    }
 }
