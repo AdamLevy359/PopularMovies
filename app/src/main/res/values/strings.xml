@@ -11,10 +11,12 @@
 
     <string name="popularSort">most popular</string>
     <string name="topRatedSort">highest rated</string>
+    <string name="favoriteSort">favorites</string>
 
     <string-array name="movies_array">
         <item>@string/popularSort</item>
         <item>@string/topRatedSort</item>
+        <item>@string/favoriteSort</item>
     </string-array>
 
     <string name="trailers_label">Trailers:</string>

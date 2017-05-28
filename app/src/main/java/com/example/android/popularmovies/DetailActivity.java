@@ -20,7 +20,6 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.asyncTasks.DetailsAsyncTaskLoader;
 import com.example.android.popularmovies.adapters.ReviewAdapter;
 import com.example.android.popularmovies.adapters.TrailerAdapter;
 import com.example.android.popularmovies.asyncTasks.DetailsLoaderManager;
@@ -63,11 +62,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
      */
     void loadMovie(Intent intent) throws JSONException {
         if(intent != null){
-            if(intent.hasExtra("json") && intent.hasExtra("position")){
-                String jsonMoviesString = intent.getStringExtra("json");
-                int position = intent.getIntExtra("position",0);
-                ArrayList<Movie> movies = JsonUtils.getMoviesFromJson(jsonMoviesString);
-                movie = movies.get(position);
+            if(intent.hasExtra("movie")){
+                movie = intent.getParcelableExtra("movie");
                 movieTitleReleaseRating.setText(
                         "\nTitle:\n" + movie.movieTitle +
                         "\n\nRelease Date:    \n" + movie.movieReleaseDate +
@@ -155,6 +151,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         ContentValues cv = new ContentValues();
         cv.put(MovieColumns.MOVIE_DB_ID, String.valueOf(movie.movieId));
         cv.put(MovieColumns.TITLE, movie.movieTitle);
+        cv.put(MovieColumns.moviePosterURL,movie.moviePosterURL);
+        cv.put(MovieColumns.movieRating, movie.movieRating);
+        cv.put(MovieColumns.movieReleaseDate, movie.movieReleaseDate);
+        cv.put(MovieColumns.moviePlot, movie.moviePlot);
         getContentResolver().insert(MovieProvider.Movies.withId(movie.movieId),cv);
     }
 

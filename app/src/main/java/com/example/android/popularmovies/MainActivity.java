@@ -1,8 +1,10 @@
 package com.example.android.popularmovies;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +17,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.example.android.popularmovies.adapters.MovieAdapter;
+import com.example.android.popularmovies.adapters.MovieCursorAdapter;
+import com.example.android.popularmovies.data.MovieProvider;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.example.android.popularmovies.utilities.JsonUtils;
 import org.json.JSONException;
@@ -22,17 +26,87 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import static com.example.android.popularmovies.utilities.JsonUtils.JSON_EXTRA;
-import static com.example.android.popularmovies.utilities.JsonUtils.POSITION_EXTRA;
 import static com.example.android.popularmovies.utilities.JsonUtils.SORT_EXTRA;
 
-public class MainActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<ArrayList<Movie>> {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+
+    private LoaderManager.LoaderCallbacks<ArrayList<Movie>> movieLoaderCallbacks =
+            new LoaderManager.LoaderCallbacks<ArrayList<Movie>>() {
+                @Override
+                public Loader<ArrayList<Movie>> onCreateLoader(int id, final Bundle args) {
+                    return new AsyncTaskLoader<ArrayList<Movie>>(getApplicationContext()) {
+
+                        ArrayList<Movie> mMovieDbData;
+
+                        @Override
+                        protected void onStartLoading() {
+
+                            if (args == null) {
+                                return;
+                            }
+                            if(mMovieDbData != null){
+                                deliverResult(mMovieDbData);
+                            }else {
+                                mLoadingIndicator.setVisibility(View.VISIBLE);
+                                mGridView.setVisibility(View.GONE);
+                                forceLoad();
+                            }
+                        }
+
+                        @Override
+                        public ArrayList<Movie> loadInBackground() {
+                            String sortOrder = args.getString(SORT_EXTRA);
+                            URL movieRequestUrl;
+
+                            if(sortOrder.equals(getString(R.string.popularSort)))
+                                movieRequestUrl = NetworkUtils.buildPopularMoviesURL();
+                            else
+                                movieRequestUrl = NetworkUtils.buildTopRatedURL();
+
+                            try {
+                                String jsonMoviesString = NetworkUtils.getResponseFromHttpUrl(movieRequestUrl);
+                                ArrayList<Movie> movieData = JsonUtils.getMoviesFromJson(jsonMoviesString);
+                                return movieData;
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                return null;
+                            }
+                        }
+
+                        @Override
+                        public void deliverResult(ArrayList<Movie> movieDbData) {
+                            mMovieDbData = movieDbData;
+                            super.deliverResult(movieDbData);
+                        }
+                    };
+                }
+
+                @Override
+                public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
+                    mLoadingIndicator.setVisibility(View.INVISIBLE);
+                    if (data != null) {
+                        mMovies.clear();
+                        mMovies.addAll(data);
+                        showMovieGridView();
+                    } else {
+                        showErrorMessage();
+                    }
+                }
+
+                @Override
+                public void onLoaderReset(Loader<ArrayList<Movie>> loader) {
+
+                }
+            };
+
     private static final int MOVIEDB_SEARCH_LOADER = 1;
+    private static final int FAVORITE_CURSOR_LOADER = 4;
     private GridView mGridView;
     private MovieAdapter mMovieAdapter;
+    private MovieCursorAdapter mMovieCursorAdapter;
     private TextView mErrorMessageDisplay;
     private ProgressBar mLoadingIndicator;
-    String jsonMoviesString;
     String sortPreference;
     ArrayList<Movie> mMovies;
     Spinner sortSpinner;
@@ -41,9 +115,8 @@ public class MainActivity extends AppCompatActivity implements
     private void getSavedData(Bundle savedInstanceState) throws JSONException {
         if (savedInstanceState.containsKey(JSON_EXTRA) &&
                 savedInstanceState.containsKey(SORT_EXTRA)) {
-            jsonMoviesString = savedInstanceState.getString(JSON_EXTRA);
             sortPreference = savedInstanceState.getString(SORT_EXTRA);
-            ArrayList<Movie> savedMovies = JsonUtils.getMoviesFromJson(jsonMoviesString);
+            ArrayList<Movie> savedMovies = savedInstanceState.getParcelableArrayList("mMovies");
             mMovies.clear();
             mMovies.addAll(savedMovies);
         }
@@ -78,17 +151,19 @@ public class MainActivity extends AppCompatActivity implements
                 R.array.movies_array, R.layout.spinner_layout);
         adapter.setDropDownViewResource(R.layout.spinner_layout);
         sortSpinner.setAdapter(adapter);
-        if(sortPreference == getString(R.string.popularSort))
+        if(sortPreference.equals(getString(R.string.popularSort)))
             sortSpinner.setSelection(0,false);
-        else
+        else if(sortPreference.equals(getString(R.string.topRatedSort)))
             sortSpinner.setSelection(1,false);
+        else
+            sortSpinner.setSelection(2,false);
 
         //Create the listener for the spinner
         sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 sortPreference = adapterView.getItemAtPosition(i).toString();
-                loadMovieData();
+                loadData();
             }
 
             @Override
@@ -98,9 +173,7 @@ public class MainActivity extends AppCompatActivity implements
         });
 
 
-        //Create custom movie adapter and gridview
-        mMovieAdapter = new MovieAdapter(this, mMovies);
-        mGridView.setAdapter(mMovieAdapter);
+
 
         //Create the listener for the gridview
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -108,32 +181,60 @@ public class MainActivity extends AppCompatActivity implements
                                     int position, long id) {
                 Class detailActivityClass = DetailActivity.class;
                 Intent intent = new Intent(MainActivity.this, detailActivityClass);
-                intent.putExtra(JSON_EXTRA, jsonMoviesString);
-                intent.putExtra(POSITION_EXTRA, position);
+                intent.putExtra("movie", mMovies.get(position));
                 startActivity(intent);
 
             }
         });
 
-        loadMovieData();
+        loadData();
+    }
+
+    private void loadData(){
+        mMovies.clear();
+        if(sortPreference.equalsIgnoreCase(getString(R.string.favoriteSort))){
+            loadFavoriteData();
+
+        }else{
+            loadMovieData();
+        }
     }
 
     private void loadMovieData() {
+
+        //Create custom movie adapter and gridview
+        mMovieAdapter = new MovieAdapter(this, mMovies);
+        mGridView.setAdapter(mMovieAdapter);
+
+
         Bundle queryBundle = new Bundle();
         queryBundle.putString(SORT_EXTRA, sortPreference);
         LoaderManager loaderManager = getSupportLoaderManager();
         Loader<ArrayList<Movie>> githubSearchLoader = loaderManager.getLoader(MOVIEDB_SEARCH_LOADER);
         if (githubSearchLoader == null) {
-            loaderManager.initLoader(MOVIEDB_SEARCH_LOADER, queryBundle, this);
+            loaderManager.initLoader(MOVIEDB_SEARCH_LOADER, queryBundle, movieLoaderCallbacks);
         } else {
-            loaderManager.restartLoader(MOVIEDB_SEARCH_LOADER, queryBundle, this);
+            loaderManager.restartLoader(MOVIEDB_SEARCH_LOADER, queryBundle, movieLoaderCallbacks);
         }
+    }
+
+    private void loadFavoriteData(){
+
+        mMovieCursorAdapter = new MovieCursorAdapter(getApplicationContext(), null, mMovies);
+        mGridView.setAdapter(mMovieCursorAdapter);
+        LoaderManager loaderManager = getSupportLoaderManager();
+        loaderManager.initLoader(FAVORITE_CURSOR_LOADER, null, this);
+
     }
 
     private void showMovieGridView() {
         mErrorMessageDisplay.setVisibility(View.INVISIBLE);
         mGridView.setVisibility(View.VISIBLE);
-        mMovieAdapter.notifyDataSetChanged();
+
+        if(sortPreference.equals(getString(R.string.favoriteSort)))
+            mMovieCursorAdapter.notifyDataSetChanged();
+        else
+            mMovieAdapter.notifyDataSetChanged();
     }
 
     private void showErrorMessage() {
@@ -141,77 +242,35 @@ public class MainActivity extends AppCompatActivity implements
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
-    @Override
-    public Loader<ArrayList<Movie>> onCreateLoader(int id, final Bundle args) {
-        return new AsyncTaskLoader<ArrayList<Movie>>(this) {
 
-            ArrayList<Movie> mMovieDbData;
 
-            @Override
-            protected void onStartLoading() {
 
-                if (args == null) {
-                    return;
-                }
-                if(mMovieDbData != null){
-                    deliverResult(mMovieDbData);
-                }else {
-                    mLoadingIndicator.setVisibility(View.VISIBLE);
-                    mGridView.setVisibility(View.GONE);
-                    forceLoad();
-                }
-            }
-
-            @Override
-            public ArrayList<Movie> loadInBackground() {
-                String sortOrder = args.getString(SORT_EXTRA);
-                URL movieRequestUrl;
-
-                if(sortOrder.equals(getString(R.string.popularSort)))
-                    movieRequestUrl = NetworkUtils.buildPopularMoviesURL();
-                else
-                    movieRequestUrl = NetworkUtils.buildTopRatedURL();
-
-                try {
-                    jsonMoviesString = NetworkUtils.getResponseFromHttpUrl(movieRequestUrl);
-                    ArrayList<Movie> movieData = JsonUtils.getMoviesFromJson(jsonMoviesString);
-                    return movieData;
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-
-            @Override
-            public void deliverResult(ArrayList<Movie> movieDbData) {
-                mMovieDbData = movieDbData;
-                super.deliverResult(movieDbData);
-            }
-        };
-    }
-
-    @Override
-    public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
-        mLoadingIndicator.setVisibility(View.INVISIBLE);
-        if (data != null) {
-            mMovies.clear();
-            mMovies.addAll(data);
-            showMovieGridView();
-        } else {
-            showErrorMessage();
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<ArrayList<Movie>> loader) {
-
-    }
 
     @Override
     public void onSaveInstanceState(Bundle outState){
-        outState.putString(JSON_EXTRA, jsonMoviesString);
+        outState.putParcelableArrayList("mMovies",mMovies);
         outState.putString(SORT_EXTRA, sortPreference);
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new CursorLoader(this, MovieProvider.Movies.CONTENT_URI,
+                null,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mMovieCursorAdapter.swapCursor(data);
+        showMovieGridView();
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mMovieCursorAdapter.swapCursor(null);
+
     }
 }

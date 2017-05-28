@@ -23,6 +23,10 @@ public class NetworkUtils {
 
     final static String KEY_PARAM = "api_key";
 
+    public static String buildMoviePosterAddress(String posterPath){
+        return "http://image.tmdb.org/t/p/w185"+posterPath;
+    }
+
     /**
      * Builds the url to get the top rated moves
      * @return The URL to query the movie server for top rated movies

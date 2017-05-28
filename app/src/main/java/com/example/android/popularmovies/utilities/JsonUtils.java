@@ -37,24 +37,17 @@ public class JsonUtils {
         JSONArray moviesJsonArray = moviesJsonObject.getJSONArray(RESULTS_LIST);
 
         for(int i=0; i<moviesJsonArray.length(); i++){
-            String movieTitle;
-            String moviePosterURL;
-            String moviePlot;
-            String movieRating;
-            String movieReleaseDate;
-            long movieId;
-
             //Get the JSON object representing the movie
             JSONObject movieJsonObject = moviesJsonArray.getJSONObject(i);
-            movieTitle = movieJsonObject.getString(MOVIE_TITLE);
-            moviePosterURL = movieJsonObject.getString(MOVIE_POSTER_PATH);
-            moviePlot = movieJsonObject.getString(MOVIE_OVERVIEW);
-            movieRating = movieJsonObject.getString(MOVIE_RATING);
-            movieReleaseDate = movieJsonObject.getString(MOVIE_RELEASE_DATE);
-            movieId = movieJsonObject.getLong(MOVIE_ID);
+            String movieTitle = movieJsonObject.getString(MOVIE_TITLE);
+            String posterPath = movieJsonObject.getString(MOVIE_POSTER_PATH);
+            String moviePlot = movieJsonObject.getString(MOVIE_OVERVIEW);
+            String movieRating = movieJsonObject.getString(MOVIE_RATING);
+            String movieReleaseDate = movieJsonObject.getString(MOVIE_RELEASE_DATE);
+            long movieId = movieJsonObject.getLong(MOVIE_ID);
 
             //Create a movie object from the Json data and add it to the ArrayList
-            Movie movie = new Movie(movieTitle, moviePosterURL, moviePlot, movieRating, movieReleaseDate, movieId);
+            Movie movie = new Movie(movieTitle, NetworkUtils.buildMoviePosterAddress(posterPath), moviePlot, movieRating, movieReleaseDate, movieId);
             movies.add(movie);
         }
         return movies;
