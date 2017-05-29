@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.example.android.popularmovies.Movie;
 import com.example.android.popularmovies.R;
 import com.example.android.popularmovies.data.MovieColumns;
+import com.example.android.popularmovies.utilities.DatabaseUtils;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -20,11 +21,9 @@ import java.util.ArrayList;
 public class MovieCursorAdapter extends CursorAdapter {
 
     private static final String LOG_TAG = MovieCursorAdapter.class.getSimpleName();
-    private ArrayList<Movie> mMovies;
 
-    public MovieCursorAdapter(Context context, Cursor cursor, ArrayList<Movie> movies){
+    public MovieCursorAdapter(Context context, Cursor cursor){
         super(context, cursor, FLAG_REGISTER_CONTENT_OBSERVER);
-        mMovies = movies;
     }
 
     @Override
@@ -35,16 +34,7 @@ public class MovieCursorAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        String title = cursor.getString(cursor.getColumnIndex(MovieColumns.TITLE));
-        String poster = cursor.getString(cursor.getColumnIndex(MovieColumns.moviePosterURL));
-        String plot = cursor.getString(cursor.getColumnIndex(MovieColumns.moviePlot));
-        String rating = cursor.getString(cursor.getColumnIndex(MovieColumns.movieRating));
-        String release = cursor.getString(cursor.getColumnIndex(MovieColumns.movieReleaseDate));
-        String stringID = cursor.getString(cursor.getColumnIndex(MovieColumns.MOVIE_DB_ID));
-        long id = Long.parseLong(stringID);
-        Movie movie = new Movie(title, poster, plot, rating, release, id);
-        if(!mMovies.contains(movie))
-        mMovies.add(movie);
+        Movie movie = DatabaseUtils.GetMovieFromCursor(cursor);
 
         ImageView movieImageView = (ImageView) view.findViewById(R.id.movie_image);
         TextView movieTextView = (TextView) view.findViewById(R.id.movie_text);

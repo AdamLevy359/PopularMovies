@@ -19,13 +19,13 @@ import android.widget.TextView;
 import com.example.android.popularmovies.adapters.MovieAdapter;
 import com.example.android.popularmovies.adapters.MovieCursorAdapter;
 import com.example.android.popularmovies.data.MovieProvider;
+import com.example.android.popularmovies.utilities.DatabaseUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.example.android.popularmovies.utilities.JsonUtils;
 import org.json.JSONException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import static com.example.android.popularmovies.utilities.JsonUtils.JSON_EXTRA;
 import static com.example.android.popularmovies.utilities.JsonUtils.SORT_EXTRA;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -113,13 +113,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
 
     private void getSavedData(Bundle savedInstanceState) throws JSONException {
-        if (savedInstanceState.containsKey(JSON_EXTRA) &&
-                savedInstanceState.containsKey(SORT_EXTRA)) {
+        if (savedInstanceState.containsKey(SORT_EXTRA)) {
             sortPreference = savedInstanceState.getString(SORT_EXTRA);
             ArrayList<Movie> savedMovies = savedInstanceState.getParcelableArrayList("mMovies");
             mMovies.clear();
             mMovies.addAll(savedMovies);
         }
+    }
+
+    protected void onResume(){
+        super.onResume();
+        loadData();
     }
 
     @Override
@@ -187,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-        loadData();
+
     }
 
     private void loadData(){
@@ -201,11 +205,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     private void loadMovieData() {
-
-        //Create custom movie adapter and gridview
         mMovieAdapter = new MovieAdapter(this, mMovies);
         mGridView.setAdapter(mMovieAdapter);
-
 
         Bundle queryBundle = new Bundle();
         queryBundle.putString(SORT_EXTRA, sortPreference);
@@ -219,11 +220,16 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     private void loadFavoriteData(){
-
-        mMovieCursorAdapter = new MovieCursorAdapter(getApplicationContext(), null, mMovies);
+        mMovieCursorAdapter = new MovieCursorAdapter(getApplicationContext(), null);
         mGridView.setAdapter(mMovieCursorAdapter);
+
         LoaderManager loaderManager = getSupportLoaderManager();
-        loaderManager.initLoader(FAVORITE_CURSOR_LOADER, null, this);
+        Loader<Cursor> favoritesLoader = loaderManager.getLoader(FAVORITE_CURSOR_LOADER);
+        if(favoritesLoader == null) {
+            loaderManager.initLoader(FAVORITE_CURSOR_LOADER, null, this);
+        }else{
+            loaderManager.restartLoader(MOVIEDB_SEARCH_LOADER, null, this);
+        }
 
     }
 
@@ -231,9 +237,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mErrorMessageDisplay.setVisibility(View.INVISIBLE);
         mGridView.setVisibility(View.VISIBLE);
 
-        if(sortPreference.equals(getString(R.string.favoriteSort)))
-            mMovieCursorAdapter.notifyDataSetChanged();
-        else
+        if(!sortPreference.equals(getString(R.string.favoriteSort)))
             mMovieAdapter.notifyDataSetChanged();
     }
 
@@ -264,6 +268,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mMovies.clear();
+        mMovies.addAll(DatabaseUtils.getMoviesArrayFromCursor(data));
         mMovieCursorAdapter.swapCursor(data);
         showMovieGridView();
     }

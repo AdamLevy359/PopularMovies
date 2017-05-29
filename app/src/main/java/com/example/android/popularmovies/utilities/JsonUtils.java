@@ -10,7 +10,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class JsonUtils {
-    public static final String JSON_EXTRA = "json";
     public static final String SORT_EXTRA = "sort";
     public static final String POSITION_EXTRA = "position";
     public static final String MOVIE_ID = "id";

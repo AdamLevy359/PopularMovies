@@ -32,10 +32,15 @@ import org.json.JSONException;
 import java.util.ArrayList;
 
 import static com.example.android.popularmovies.utilities.JsonUtils.MOVIE_ID;
+import static com.example.android.popularmovies.utilities.JsonUtils.SORT_EXTRA;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
     private static final int TRAILER_REVIEW_SEARCH_LOADER = 2;
     private static final int CURSOR_LOADER_ID = 3;
+
+    private static final String TRAILERS_KEY = "trailers";
+    private static final String MOVIE_KEY = "movie";
+    private static final String REVIEWS_KEY = "reviews";
 
     private TextView movieTitleReleaseRating;
     private TextView moviePlot;
@@ -76,9 +81,16 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        if(savedInstanceState != null){
+            if (savedInstanceState.containsKey(MOVIE_KEY)) {
+                movie = savedInstanceState.getParcelable(MOVIE_KEY);
+                trailers = savedInstanceState.getStringArrayList(TRAILERS_KEY);
+                reviews = savedInstanceState.getParcelableArrayList(REVIEWS_KEY);
+            }
+        }
 
         movieTitleReleaseRating = (TextView) findViewById(R.id.movieTitle);
         moviePlot = (TextView) findViewById(R.id.moviePlot);
@@ -134,9 +146,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         queryBundle.putLong(MOVIE_ID, movie.movieId);
         LoaderManager loaderManager = getSupportLoaderManager();
         Loader<ArrayList<Movie>> githubSearchLoader = loaderManager.getLoader(TRAILER_REVIEW_SEARCH_LOADER);
+        detailsLoaderManager = new DetailsLoaderManager(getApplicationContext(), trailersListView, reviewsListView,
+                trailerAdapter, reviewsAdapter, scrollView, mLoadingIndicator, trailers, reviews);
         if (githubSearchLoader == null) {
-            detailsLoaderManager = new DetailsLoaderManager(getApplicationContext(), trailersListView, reviewsListView,
-                    trailerAdapter, reviewsAdapter, scrollView, mLoadingIndicator, trailers, reviews);
             loaderManager.initLoader(TRAILER_REVIEW_SEARCH_LOADER, queryBundle, detailsLoaderManager);
         } else {
             loaderManager.restartLoader(TRAILER_REVIEW_SEARCH_LOADER, queryBundle, detailsLoaderManager);
@@ -187,5 +199,13 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState){
+        outState.putParcelable(MOVIE_KEY,movie);
+        outState.putStringArrayList(TRAILERS_KEY, trailers);
+        outState.putParcelableArrayList(REVIEWS_KEY, reviews);
+        super.onSaveInstanceState(outState);
     }
 }
