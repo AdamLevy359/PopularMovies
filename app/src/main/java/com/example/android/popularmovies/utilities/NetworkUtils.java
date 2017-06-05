@@ -23,6 +23,9 @@ public class NetworkUtils {
 
     final static String KEY_PARAM = "api_key";
 
+    final static int CONNECTION_TIMEOUT = 5000; // set the connection timeout to 5 seconds
+    final static int READ_TIMEOUT = 10000;  //set the read timeout
+
     public static String buildMoviePosterAddress(String posterPath){
         return "http://image.tmdb.org/t/p/w185"+posterPath;
     }
@@ -93,6 +96,8 @@ public class NetworkUtils {
      */
     public static String getResponseFromHttpUrl(URL url) throws IOException {
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+        urlConnection.setConnectTimeout(CONNECTION_TIMEOUT);
+        urlConnection.setReadTimeout(READ_TIMEOUT);
         try {
             InputStream in = urlConnection.getInputStream();
 

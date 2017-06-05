@@ -1,7 +1,10 @@
 package com.example.android.popularmovies;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.CursorLoader;
@@ -29,6 +32,7 @@ import java.util.ArrayList;
 import static com.example.android.popularmovies.utilities.JsonUtils.SORT_EXTRA;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+
 
     private LoaderManager.LoaderCallbacks<ArrayList<Movie>> movieLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<ArrayList<Movie>>() {
@@ -118,12 +122,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             ArrayList<Movie> savedMovies = savedInstanceState.getParcelableArrayList("mMovies");
             mMovies.clear();
             mMovies.addAll(savedMovies);
-        }
-    }
 
-    protected void onResume(){
-        super.onResume();
-        loadData();
+            mMovieAdapter = new MovieAdapter(this, mMovies);
+            mGridView.setAdapter(mMovieAdapter);
+            showMovieGridView();
+        }
     }
 
     @Override
@@ -134,15 +137,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         sortPreference = getString(R.string.popularSort);
         mMovies = new ArrayList<>();
 
-        if(savedInstanceState != null){
-            try{
-                getSavedData(savedInstanceState);
-            }catch (JSONException e){
-                e.printStackTrace();
-                showErrorMessage();
-                return;
-            }
-        }
+
 
 
         mGridView = (GridView) findViewById(R.id.movies_grid);
@@ -178,7 +173,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
 
 
-
         //Create the listener for the gridview
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
@@ -191,7 +185,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-
+        if(savedInstanceState != null){
+            try{
+                getSavedData(savedInstanceState);
+            }catch (JSONException e){
+                e.printStackTrace();
+                showErrorMessage();
+                return;
+            }
+        }else{
+            loadData();
+        }
     }
 
     private void loadData(){
@@ -228,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         if(favoritesLoader == null) {
             loaderManager.initLoader(FAVORITE_CURSOR_LOADER, null, this);
         }else{
-            loaderManager.restartLoader(MOVIEDB_SEARCH_LOADER, null, this);
+            loaderManager.restartLoader(FAVORITE_CURSOR_LOADER, null, this);
         }
 
     }
@@ -245,10 +249,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mGridView.setVisibility(View.INVISIBLE);
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
-
-
-
-
 
     @Override
     public void onSaveInstanceState(Bundle outState){
